@@ -22,7 +22,8 @@ contract DAO is Ownable, ReentrancyGuard {
     ERC20 public treasuryToken;
 
     event ProjectCreated(uint256 projectId, address beneficiary, uint256 amountRequested);
-    event Voted(uint256 projectId, address voter, uint256 votes);
+    event VotedYes(uint256 projectId, address voter, uint256 votes);
+    event VotedNo(uint256 projectId, address voter, uint256 votes);
     event ProjectExecuted(uint256 projectId, address executor);
 
     modifier onlyRegisteredVoter() {
@@ -58,12 +59,20 @@ contract DAO is Ownable, ReentrancyGuard {
         emit ProjectCreated(projectId, _beneficiary, _amountRequested);
     }
 
-    function vote(uint256 _projectId, uint256 _votes) external onlyRegisteredVoter onlyProjectVoter(_projectId) nonReentrant {
+    function voteYes(uint256 _projectId, uint256 _votes) external onlyRegisteredVoter onlyProjectVoter(_projectId) nonReentrant {
         require(treasuryToken.transferFrom(msg.sender, address(this), _votes), "Vote transfer failed");
 
         projects[_projectId].votes += _votes;
 
-        emit Voted(_projectId, msg.sender, _votes);
+        emit VotedYes(_projectId, msg.sender, _votes);
+    }
+
+    function voteNo(uint256 _projectId, uint256 _votes) external onlyRegisteredVoter onlyProjectVoter(_projectId) nonReentrant {
+        require(treasuryToken.transferFrom(msg.sender, address(this), _votes), "Vote transfer failed");
+
+        projects[_projectId].votes -= _votes;
+
+        emit VotedNo(_projectId, msg.sender, _votes);
     }
 
     function executeProject(uint256 _projectId) external onlyProjectBeneficiary(_projectId) nonReentrant {
